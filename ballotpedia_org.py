@@ -1,4 +1,3 @@
-import zipfile
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -108,25 +107,32 @@ def extract_state_from_office(office):
 
 def process_legislature(links, name):
     # Fetch office and representative names
+    if name == "us_lower_dist_representatives":
+        name_column = "lh_rep_name"
+    else:
+        name_column = "uh_rep_name"
+
     office_name_data = []
     with ThreadPoolExecutor(max_workers=5) as executor:
         office_name_data = list(tqdm(executor.map(extract_office_name, links), total=len(links)))
     # Flatten the list of lists
     office_name_data = [item for sublist in office_name_data for item in sublist]
-    result_df = pd.DataFrame(office_name_data, columns=['Office', f"{name}"])
+    result_df = pd.DataFrame(office_name_data, columns=['Office', f"{name_column}"])
     result_df['State'] = result_df['Office'].apply(extract_state_from_office)
     result_df['dist_num'] = result_df.apply(lambda row: row['Office'].split('District ')[-1].split('-')[0].strip() if row['State'].lower() == 'washington' else row['Office'].split(' ')[-1], axis=1)
     result_df['dist_num'] = result_df.apply(lambda row: extract_vermont_district(row) if row['State'].lower() == 'vermont' else row['dist_num'], axis=1)
     # For New Hampshire, extract everything after 'Representatives'
     result_df['dist_num'] = result_df.apply(lambda row: row['Office'].split('Representatives')[-1].strip() if row['State'].lower() == 'new hampshire' and len(row['Office'].split('Representatives')) > 1 else row['dist_num'], axis=1)
     result_df['dist_num'] = result_df.apply(lambda row: extract_massachusetts_district(row) if row['State'].lower() == 'massachusetts' else row['dist_num'], axis=1)
-    # Convert state names to lowercase and strip whitespace
     result_df['state_name'] = result_df['State'].str.lower().str.strip()
-    # Map state names to state codes and add a 'STATE' column
     result_df['state_code'] = result_df['state_name'].map(state_code_mapping)
-#     result_df.drop(coulmns='State', inplace=True)
+    result_df['state_name'] = result_df['state_name'].str.title()
+    output_folder = "representative_data"
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    # Save the resulting DataFrame to an Excel file in the specified folder
     result_df.drop(columns=['State', 'Office'], inplace=True)
-    result_df.to_excel(f"{name}.xlsx", index=False)
+    result_df.to_excel(os.path.join(output_folder, f"{name}.xlsx"), index=False)
     
 # Main function to read zip files, unzip, and process shapefiles
 def main():
@@ -154,7 +160,7 @@ def main():
         house_links = [row['House Link'] for _, row in df.iterrows() if row['House Link'] != "N/A"]
         senate_links = [row['Senate Link'] for _, row in df.iterrows() if row['Senate Link'] != "N/A"]
 
-        process_legislature(house_links, "lh_rep_name")
-        process_legislature(senate_links, "uh_rep_name")
+        process_legislature(house_links, "us_lower_dist_representatives")
+        process_legislature(senate_links, "us_upper_dist_representatives")
 
 main()
