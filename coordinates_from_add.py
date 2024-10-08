@@ -32,7 +32,7 @@ def get_location_freeform(query):
         return None, None
 
 # Read CSV file
-df = pd.read_csv(r"D:\coordinate.csv")
+df = pd.read_csv(r"coordinate.csv")
 
 def build_address(row):
     street = row['Street Address']
