@@ -127,6 +127,7 @@ def process_legislature(links, name):
     result_df['state_name'] = result_df['State'].str.lower().str.strip()
     result_df['state_code'] = result_df['state_name'].map(state_code_mapping)
     result_df['state_name'] = result_df['state_name'].str.title()
+    result_df = result_df[result_df[name_column].str.lower() != 'vacant']
     output_folder = "representative_data"
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
