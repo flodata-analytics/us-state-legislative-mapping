@@ -20,11 +20,12 @@ def get_location_freeform(query):
     # Send GET request to the Nominatim API
     response = requests.get(url, params=params, headers=headers)
 
-    # Check if the request was successful
     if response.status_code == 200:
         data = response.json()
         if data:
-            return data[0]['lat'], data[0]['lon']
+            lat = round(float(data[0]['lat']), 7)
+            lng = round(float(data[0]['lon']), 7)
+            return lat, lng
         else:
             return None, None
     else:
@@ -43,15 +44,15 @@ def build_address(row):
 df['Full_Address'] = df.apply(build_address, axis=1)
 
 # Create empty columns for latitude and longitude
-df['lat'] = None
-df['lng'] = None
+df['latitude'] = None
+df['longitude'] = None
 
 # Loop through each address and get coordinates
 for index, row in df.iterrows():
     address = row['Full_Address']
     lat, lng = get_location_freeform(address)
-    df.at[index, 'lat'] = lat
-    df.at[index, 'lng'] = lng
+    df.at[index, 'latitude'] = lat
+    df.at[index, 'longitude'] = lng
     print(f"Processed: {address} -> lat: {lat}, lng: {lng}")
     time.sleep(1)  # Respect the rate limits
 
