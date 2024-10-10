@@ -47,7 +47,7 @@ def lower_house_shape_file_modification(lower_zip,excel_file_lower,output_zip_lo
     excel_df['state_code'] = excel_df['state_code'].astype(str).str.zfill(2)
     excel_df = excel_df.groupby(['dist_num', 'state_code', 'state_name'], as_index=False).agg({'lh_rep_name': lambda x: '///'.join(x)})
     merged_gdf = gdf.merge(excel_df, left_on=['BASENAME', 'STATE'], right_on=['dist_num', 'state_code'], how='left')
-    for i in range(9):
+    for i in range(10):
         merged_gdf[f'REP{i+1}'] = merged_gdf['lh_rep_name'].apply(lambda x: x.split('///')[i] if isinstance(x, str) and len(x.split('///')) > i else None)
     merged_gdf.drop(columns=['dist_num', 'state_code', 'lh_rep_name'], inplace=True)
     merged_gdf.rename(columns={'state_name': 'STATE NAME'}, inplace=True)
@@ -115,7 +115,7 @@ def upper_house_shape_file_modification(upper_zip,excel_file,output_zip):
     merged_gdf = gdf.merge(excel_df, left_on=['BASENAME', 'STATE'], right_on=['dist_num', 'state_code'], how='left')
 
     # Step 6: Split the 'uh_rep_name' into separate columns REP1 through REP9
-    for i in range(9):
+    for i in range(10):
         merged_gdf[f'REP{i+1}'] = merged_gdf['uh_rep_name'].apply(lambda x: x.split('///')[i] if isinstance(x, str) and len(x.split('///')) > i else None)
 
     # Step 7: Drop the columns used for merging (optional)
@@ -145,11 +145,11 @@ def upper_house_shape_file_modification(upper_zip,excel_file,output_zip):
 if __name__=="__main__":
     # File paths
     output_folder = "zip_output_folder"
-    upper_zip = "State_Legislative_Upper.zip"
-    excel_file = r"representative_data/us_upper_dist_representatives.xlsx"
+    upper_zip = r"us-state-legislative-mapping/State_Legislative_Upper.zip"
+    excel_file = r"ballotpedia/representative_data/us_upper_dist_representatives.xlsx"
     output_zip = os.path.join(output_folder, "State_Legislative_Upper_Modified.zip")
-    lower_zip = "State_Legislative_Lower.zip"
-    excel_file_lower = r"representative_data/us_lower_dist_representatives.xlsx"
+    lower_zip = r"us-state-legislative-mapping/State_Legislative_Lower.zip"
+    excel_file_lower = r"ballotpedia/representative_data/us_lower_dist_representatives.xlsx"
     output_zip_lower = os.path.join(output_folder, "State_Legislative_Lower_Modified.zip")
     lower_house_shape_file_modification(lower_zip,excel_file_lower,output_zip_lower)
     upper_house_shape_file_modification(upper_zip,excel_file,output_zip)
